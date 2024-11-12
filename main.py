@@ -1,24 +1,26 @@
 import pandas as pd
 import numpy as np
+import random
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import streamlit as st
 import plotly.express as px
+from faker import Faker  # For generating random names
 
-# Function to generate more realistic sample data
-def generate_sample_data():
+# Initialize Faker to generate random names
+fake = Faker()
+
+# Function to generate more realistic sample data with random lead names
+def generate_sample_data(num_samples=200):
     np.random.seed(42)  # For reproducibility
     data = {
-        "Lead Name": [
-            "Lead A", "Lead B", "Lead C", "Lead D", "Lead E", "Lead F", "Lead G", "Lead H", "Lead I", "Lead J",
-            "Lead K", "Lead L", "Lead M", "Lead N", "Lead O", "Lead P", "Lead Q", "Lead R", "Lead S", "Lead T"
-        ],
-        "Recent Interactions": np.random.randint(5, 30, 20),  # More realistic interaction values
-        "Last Engagement Days": np.random.randint(5, 60, 20),  # Engagement days ranging from 5 to 60
-        "Lead Source Score": np.random.randint(1, 4, 20),  # Same Lead Sources: 1 - Conferences, 2 - Website Visit, 3 - Reference Contact
-        "Company Size Score": np.random.randint(5, 15, 20),  # A range of company sizes from 5 to 15
-        "Converted": np.random.randint(0, 2, 20)  # Binary outcome for conversion
+        "Lead Name": [fake.name() for _ in range(num_samples)],  # Random names
+        "Recent Interactions": np.random.randint(5, 30, num_samples),  # Realistic interaction values
+        "Last Engagement Days": np.random.randint(5, 60, num_samples),  # Engagement days ranging from 5 to 60
+        "Lead Source Score": np.random.randint(1, 4, num_samples),  # Same Lead Sources: 1 - Conferences, 2 - Website Visit, 3 - Reference Contact
+        "Company Size Score": np.random.randint(5, 15, num_samples),  # A range of company sizes from 5 to 15
+        "Converted": np.random.randint(0, 2, num_samples)  # Binary outcome for conversion
     }
     
     lead_data = pd.DataFrame(data)
@@ -29,7 +31,7 @@ def generate_sample_data():
 
 # Initialize or regenerate data based on button click
 if "lead_data" not in st.session_state or st.button("Refresh Data"):
-    st.session_state["lead_data"] = generate_sample_data()
+    st.session_state["lead_data"] = generate_sample_data(num_samples=200)
 
 lead_data = st.session_state["lead_data"]
 
@@ -78,8 +80,8 @@ with col2:
     )
     st.plotly_chart(fig2, use_container_width=True)
 
-# Sidebar Selection for Lead Details (Moved to Main UI)
-selected_lead = st.selectbox("Select a Lead", lead_data["Lead Name"].unique())
+# Sidebar Selection for Lead Details (Updated to allow multiple selection)
+selected_leads = st.multiselect("Select Leads", lead_data["Lead Name"].unique())
 
 # Add the button for Show/Hide Detailed Lead Information in the main UI
 if "show_detailed_info" not in st.session_state:
@@ -89,28 +91,31 @@ detail_toggle_label = "Hide Lead Details" if st.session_state["show_detailed_inf
 if st.button(detail_toggle_label):
     st.session_state["show_detailed_info"] = not st.session_state["show_detailed_info"]
 
-# Display Detailed Lead Information
+# Display Detailed Lead Information for selected leads
 if st.session_state["show_detailed_info"]:
-    # Filter the selected lead data
-    selected_lead_data = lead_data[lead_data["Lead Name"] == selected_lead]
-    
-    st.write(f"### Details for {selected_lead}")
-    
-    # Display Lead's Information in a Table
-    st.write("**Lead Information**")
-    st.table(selected_lead_data[["Lead Name", "Lead Source", "Recent Interactions", "Last Engagement Days", "Company Size Score"]])
-    
-    # Display Conversion Probability
-    st.write(f"**Conversion Probability**: {selected_lead_data['Conversion Probability'].values[0]:.2f}")
-    
-    # Display Lead Source in a Pie Chart
-    st.subheader("Lead Source Breakdown")
-    fig = px.pie(
-        selected_lead_data,
-        names="Lead Source",
-        title="Lead Source Breakdown for Selected Lead",
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    if selected_leads:
+        for lead in selected_leads:
+            selected_lead_data = lead_data[lead_data["Lead Name"] == lead]
+            
+            st.write(f"### Details for {lead}")
+            
+            # Display Lead's Information in a Table
+            st.write("**Lead Information**")
+            st.table(selected_lead_data[["Lead Name", "Lead Source", "Recent Interactions", "Last Engagement Days", "Company Size Score"]])
+            
+            # Display Conversion Probability
+            st.write(f"**Conversion Probability**: {selected_lead_data['Conversion Probability'].values[0]:.2f}")
+            
+            # Display Lead Source in a Pie Chart
+            st.subheader("Lead Source Breakdown")
+            fig = px.pie(
+                selected_lead_data,
+                names="Lead Source",
+                title="Lead Source Breakdown for Selected Lead",
+            )
+            st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.write("Please select leads to view details.")
 
 # Toggle Show/Hide Training Data
 if "show_training_data" not in st.session_state:
