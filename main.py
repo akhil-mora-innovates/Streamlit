@@ -63,12 +63,21 @@ selected_leads = st.multiselect(
     options=df['Lead Name'].unique(),  # No pre-selection
 )
 
-# Display the details when the "Show Details" button is clicked
+# Adding a "Confirm Selection" step
 if selected_leads:
-    if st.button("Show Details"):
-        # Filter the details of selected leads
+    confirm_selection = st.radio(
+        "You have selected leads. Do you want to proceed with showing details?",
+        ('OK', 'Cancel'),
+        index=1  # default to 'Cancel'
+    )
+
+    if confirm_selection == 'OK':
+        # Display the details when the "Show Details" button is clicked
+        st.write("Showing details for the selected leads:")
         details = df[df['Lead Name'].isin(selected_leads)]
         st.write(details[['Lead Name', 'Lead Source', 'Conversion Probability', 'Predicted Conversion Probability']])
+    elif confirm_selection == 'Cancel':
+        st.write("You have canceled the selection.")
 else:
     st.write("Please select leads to view details.")
 
