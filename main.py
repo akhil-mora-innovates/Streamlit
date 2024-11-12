@@ -64,18 +64,26 @@ sorted_leads = sorted(df['Lead Name'].unique())
 
 # Create a collapsible container for the checkboxes
 with st.expander("Select Leads to View Details"):
-    selected_leads = []
+    # Initialize session state for selected leads
+    if 'selected_leads' not in st.session_state:
+        st.session_state.selected_leads = []
+
+    # Add checkboxes for leads and store selected leads in session state
     for lead in sorted_leads:
-        if st.checkbox(lead, key=lead):  # No "Select" prefix
-            selected_leads.append(lead)
+        if st.checkbox(lead, key=lead):
+            if lead not in st.session_state.selected_leads:
+                st.session_state.selected_leads.append(lead)
+        else:
+            if lead in st.session_state.selected_leads:
+                st.session_state.selected_leads.remove(lead)
 
 # Show Details Button
-if selected_leads:
+if len(st.session_state.selected_leads) > 0:
     show_details = st.button("Show Selected Lead Details")
     if show_details:
         # Display the details of the selected leads
         st.write("Showing details for the selected leads:")
-        details = df[df['Lead Name'].isin(selected_leads)]
+        details = df[df['Lead Name'].isin(st.session_state.selected_leads)]
         st.write(details[['Lead Name', 'Lead Source', 'Conversion Probability', 'Predicted Conversion Probability']])
 else:
     st.write("Please select leads to view details.")
