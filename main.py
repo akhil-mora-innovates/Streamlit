@@ -51,7 +51,7 @@ accuracy = accuracy_score(y_test, predictions)
 lead_data["Conversion Probability"] = model.predict_proba(X)[:, 1]
 
 # Streamlit UI
-st.title("Predictive Lead Scoring")
+st.title("Scoring Prediction by Akhil")
 st.write("Model Accuracy:", accuracy)
 
 # Show Training Data
