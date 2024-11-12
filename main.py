@@ -1,96 +1,80 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import LabelEncoder
 import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+import plotly.express as px
 from faker import Faker
 
-# Generate random data
+# Generate Random Lead Data
 fake = Faker()
-np.random.seed(42)
 
-# Create a list of lead sources
-lead_sources = ['Conference', 'Website Visit', 'Reference Contact']
+# Random Lead Data Generation
+def generate_lead_data(n=200):
+    data = []
+    for _ in range(n):
+        lead_name = fake.name()
+        lead_source = np.random.choice(['Conference', 'Website Visit', 'Reference Contact'])
+        conversion_probability = np.random.uniform(0, 1)  # Continuous value between 0 and 1
+        data.append([lead_name, lead_source, conversion_probability])
+    return pd.DataFrame(data, columns=['Lead Name', 'Lead Source', 'Conversion Probability'])
 
-# Generate 200 random lead entries
-data = []
-for i in range(200):
-    lead_name = fake.name()
-    lead_source = np.random.choice(lead_sources)
-    conversion_probability = np.random.uniform(0, 1)
-    data.append([lead_name, lead_source, conversion_probability])
+# Generate the leads dataset
+df = generate_lead_data()
 
-# Create a DataFrame
-df = pd.DataFrame(data, columns=["Lead Name", "Lead Source", "Conversion Probability"])
-
-# Encode lead source as a categorical variable
+# Encode categorical data (Lead Source)
 label_encoder = LabelEncoder()
 df['Lead Source Code'] = label_encoder.fit_transform(df['Lead Source'])
 
-# Split data into training and testing datasets
-X = df[['Lead Source Code']]
-y = df['Conversion Probability']
+# Prepare the features (X) and target (y)
+X = df[['Lead Source Code']]  # Features
+y = df['Conversion Probability']  # Target
+
+# Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Train a simple logistic regression model
-model = LogisticRegression()
+# Train a Linear Regression model
+model = LinearRegression()
 model.fit(X_train, y_train)
 
 # Predictions
 df['Predicted Conversion Probability'] = model.predict(X)
 
-# Create columns for display
-col1, col2 = st.columns([2, 2])
+# Streamlit UI Setup
+st.title("Lead Conversion Probability Prediction")
 
-# Conversion Probability by Lead Chart
-with col1:
-    st.subheader("Conversion Probability by Lead")
-    fig = px.bar(
-        df,
-        x="Lead Name",
-        y="Conversion Probability",
-        color="Lead Source",
-        title="Lead Conversion Probabilities",
-        labels={"Conversion Probability": "Probability"},
-    )
-    # Assign a unique key to avoid duplicate element IDs
-    st.plotly_chart(fig, use_container_width=True, key="conversion_probability_chart")
+# Show charts and tables
+if st.button("Show Training Data"):
+    st.write("Training Data", df[['Lead Name', 'Lead Source', 'Conversion Probability']])
 
-# Lead Source Distribution Chart
-with col2:
-    st.subheader("Lead Source Distribution")
-    fig2 = px.pie(
-        df,
-        names="Lead Source",
-        title="Lead Source Distribution",
-    )
-    # Assign a unique key to avoid duplicate element IDs
-    st.plotly_chart(fig2, use_container_width=True, key="lead_source_distribution_chart")
+# Show Conversion Probability Distribution Chart
+fig = px.histogram(df, x="Conversion Probability", nbins=20, title="Conversion Probability Distribution")
+st.plotly_chart(fig, use_container_width=True)
 
-# Allow multiple lead selection
-st.subheader("Select Lead(s) for Detailed Information")
-lead_selection = st.multiselect(
-    "Choose one or more leads:",
-    df['Lead Name'].tolist(),
-    default=df['Lead Name'].tolist()[:5]  # default to first 5 leads
+# Show Lead Source Distribution Chart
+fig2 = px.pie(df, names="Lead Source", title="Lead Source Distribution")
+st.plotly_chart(fig2, use_container_width=True)
+
+# Lead Details Selector
+st.sidebar.header("Lead Details")
+selected_leads = st.sidebar.multiselect(
+    "Select Leads to View Details",
+    options=df['Lead Name'].unique(),
+    default=df['Lead Name'].unique()[:5]
 )
 
-# Button to show selected lead details
-if st.button("Show Selected Lead Details"):
-    if lead_selection:
-        for lead in lead_selection:
-            lead_details = df[df['Lead Name'] == lead].iloc[0]
-            st.write(f"**Lead Name**: {lead_details['Lead Name']}")
-            st.write(f"**Lead Source**: {lead_details['Lead Source']}")
-            st.write(f"**Conversion Probability**: {lead_details['Conversion Probability']:.2f}")
-            st.write(f"**Predicted Conversion Probability**: {lead_details['Predicted Conversion Probability']:.2f}")
-            st.write("---")  # separator
+# Show detailed lead information with the probability score when selection is complete
+if st.sidebar.button("Show Details"):
+    if selected_leads:
+        details = df[df['Lead Name'].isin(selected_leads)]
+        st.write(details[['Lead Name', 'Lead Source', 'Conversion Probability', 'Predicted Conversion Probability']])
     else:
-        st.write("Please select at least one lead.")
+        st.write("No leads selected.")
 
-# Option to show/hide detailed training data
-if st.checkbox("Show/Hide Training Data"):
-    st.subheader("Training Data")
-    st.write(df[['Lead Name', 'Lead Source', 'Conversion Probability']])
+# Footer Information
+st.sidebar.markdown("""
+    **Conversion Prediction Model**
+    - Uses a Linear Regression model to predict the conversion probability for leads based on the lead source.
+    - The model was trained on synthetic lead data with various lead sources and conversion probabilities.
+""")
