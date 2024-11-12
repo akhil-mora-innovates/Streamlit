@@ -42,7 +42,7 @@ model.fit(X_train, y_train)
 df['Predicted Conversion Probability'] = model.predict(X)
 
 # Streamlit UI Setup
-st.title("Lead Conversion Prediction by Akhil")
+st.title("Lead Conversion Probability Prediction")
 
 # Show charts and tables
 if st.button("Show Training Data"):
@@ -56,16 +56,15 @@ st.plotly_chart(fig, use_container_width=True)
 fig2 = px.pie(df, names="Lead Source", title="Lead Source Distribution")
 st.plotly_chart(fig2, use_container_width=True)
 
-# Lead Details Selector
-st.sidebar.header("Lead Details")
-selected_leads = st.sidebar.multiselect(
+# Lead Details Selector (Now in the main app)
+st.subheader("Lead Details")
+selected_leads = st.multiselect(
     "Select Leads to View Details",
-    options=df['Lead Name'].unique(),
-    default=df['Lead Name'].unique()[:5]
+    options=df['Lead Name'].unique(),  # No pre-selection
 )
 
 # Show detailed lead information with the probability score when selection is complete
-if st.sidebar.button("Show Details"):
+if st.button("Show Details"):
     if selected_leads:
         details = df[df['Lead Name'].isin(selected_leads)]
         st.write(details[['Lead Name', 'Lead Source', 'Conversion Probability', 'Predicted Conversion Probability']])
@@ -73,7 +72,7 @@ if st.sidebar.button("Show Details"):
         st.write("No leads selected.")
 
 # Footer Information
-st.sidebar.markdown("""
+st.markdown("""
     **Conversion Prediction Model**
     - Uses a Linear Regression model to predict the conversion probability for leads based on the lead source.
     - The model was trained on synthetic lead data with various lead sources and conversion probabilities.
