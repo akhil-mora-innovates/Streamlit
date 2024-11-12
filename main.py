@@ -1,134 +1,96 @@
-import pandas as pd
-import numpy as np
-import random
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 import streamlit as st
+import pandas as pd
 import plotly.express as px
-from faker import Faker  # For generating random names
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import LabelEncoder
+import numpy as np
+from faker import Faker
 
-# Initialize Faker to generate random names
+# Generate random data
 fake = Faker()
+np.random.seed(42)
 
-# Function to generate more realistic sample data with random lead names
-def generate_sample_data(num_samples=200):
-    np.random.seed(42)  # For reproducibility
-    data = {
-        "Lead Name": [fake.name() for _ in range(num_samples)],  # Random names
-        "Recent Interactions": np.random.randint(5, 30, num_samples),  # Realistic interaction values
-        "Last Engagement Days": np.random.randint(5, 60, num_samples),  # Engagement days ranging from 5 to 60
-        "Lead Source Score": np.random.randint(1, 4, num_samples),  # Same Lead Sources: 1 - Conferences, 2 - Website Visit, 3 - Reference Contact
-        "Company Size Score": np.random.randint(5, 15, num_samples),  # A range of company sizes from 5 to 15
-        "Converted": np.random.randint(0, 2, num_samples)  # Binary outcome for conversion
-    }
-    
-    lead_data = pd.DataFrame(data)
-    source_mapping = {1: "Conferences", 2: "Website Visit", 3: "Reference Contact"}
-    lead_data["Lead Source"] = lead_data["Lead Source Score"].map(source_mapping)
-    
-    return lead_data
+# Create a list of lead sources
+lead_sources = ['Conference', 'Website Visit', 'Reference Contact']
 
-# Initialize or regenerate data based on button click
-if "lead_data" not in st.session_state or st.button("Refresh Data"):
-    st.session_state["lead_data"] = generate_sample_data(num_samples=200)
+# Generate 200 random lead entries
+data = []
+for i in range(200):
+    lead_name = fake.name()
+    lead_source = np.random.choice(lead_sources)
+    conversion_probability = np.random.uniform(0, 1)
+    data.append([lead_name, lead_source, conversion_probability])
 
-lead_data = st.session_state["lead_data"]
+# Create a DataFrame
+df = pd.DataFrame(data, columns=["Lead Name", "Lead Source", "Conversion Probability"])
 
-# Define features and target
-X = lead_data[["Recent Interactions", "Last Engagement Days", "Lead Source Score", "Company Size Score"]]
-y = lead_data["Converted"]
+# Encode lead source as a categorical variable
+label_encoder = LabelEncoder()
+df['Lead Source Code'] = label_encoder.fit_transform(df['Lead Source'])
 
-# Train-test split
+# Split data into training and testing datasets
+X = df[['Lead Source Code']]
+y = df['Conversion Probability']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Train model
-model = LogisticRegression(max_iter=500)  # Increase iterations for convergence
+# Train a simple logistic regression model
+model = LogisticRegression()
 model.fit(X_train, y_train)
 
-# Model accuracy
-accuracy = accuracy_score(y_test, model.predict(X_test))
-lead_data["Conversion Probability"] = model.predict_proba(X)[:, 1]
+# Predictions
+df['Predicted Conversion Probability'] = model.predict(X)
 
-# Streamlit UI Layout
-st.title("Enhanced Predictive Lead Scoring App")
-st.write("Model Accuracy:", accuracy)
-
-# Column Layouts for Initial Charts
-col1, col2 = st.columns(2)
+# Create columns for display
+col1, col2 = st.columns([2, 2])
 
 # Conversion Probability by Lead Chart
 with col1:
     st.subheader("Conversion Probability by Lead")
     fig = px.bar(
-        lead_data,
+        df,
         x="Lead Name",
         y="Conversion Probability",
         color="Lead Source",
         title="Lead Conversion Probabilities",
         labels={"Conversion Probability": "Probability"},
     )
-    st.plotly_chart(fig, use_container_width=True)
+    # Assign a unique key to avoid duplicate element IDs
+    st.plotly_chart(fig, use_container_width=True, key="conversion_probability_chart")
 
 # Lead Source Distribution Chart
 with col2:
     st.subheader("Lead Source Distribution")
     fig2 = px.pie(
-        lead_data,
+        df,
         names="Lead Source",
         title="Lead Source Distribution",
     )
-    st.plotly_chart(fig2, use_container_width=True)
+    # Assign a unique key to avoid duplicate element IDs
+    st.plotly_chart(fig2, use_container_width=True, key="lead_source_distribution_chart")
 
-# Sidebar Selection for Lead Details (Updated to allow multiple selection)
-selected_leads = st.multiselect("Select Leads", lead_data["Lead Name"].unique())
+# Allow multiple lead selection
+st.subheader("Select Lead(s) for Detailed Information")
+lead_selection = st.multiselect(
+    "Choose one or more leads:",
+    df['Lead Name'].tolist(),
+    default=df['Lead Name'].tolist()[:5]  # default to first 5 leads
+)
 
-# Add the button for Show/Hide Detailed Lead Information in the main UI
-if "show_detailed_info" not in st.session_state:
-    st.session_state["show_detailed_info"] = False
-
-detail_toggle_label = "Hide Lead Details" if st.session_state["show_detailed_info"] else "Show Lead Details"
-if st.button(detail_toggle_label):
-    st.session_state["show_detailed_info"] = not st.session_state["show_detailed_info"]
-
-# Display Detailed Lead Information for selected leads
-if st.session_state["show_detailed_info"]:
-    if selected_leads:
-        for lead in selected_leads:
-            selected_lead_data = lead_data[lead_data["Lead Name"] == lead]
-            
-            st.write(f"### Details for {lead}")
-            
-            # Display Lead's Information in a Table
-            st.write("**Lead Information**")
-            st.table(selected_lead_data[["Lead Name", "Lead Source", "Recent Interactions", "Last Engagement Days", "Company Size Score"]])
-            
-            # Display Conversion Probability
-            st.write(f"**Conversion Probability**: {selected_lead_data['Conversion Probability'].values[0]:.2f}")
-            
-            # Display Lead Source in a Pie Chart
-            st.subheader("Lead Source Breakdown")
-            fig = px.pie(
-                selected_lead_data,
-                names="Lead Source",
-                title="Lead Source Breakdown for Selected Lead",
-            )
-            st.plotly_chart(fig, use_container_width=True)
+# Button to show selected lead details
+if st.button("Show Selected Lead Details"):
+    if lead_selection:
+        for lead in lead_selection:
+            lead_details = df[df['Lead Name'] == lead].iloc[0]
+            st.write(f"**Lead Name**: {lead_details['Lead Name']}")
+            st.write(f"**Lead Source**: {lead_details['Lead Source']}")
+            st.write(f"**Conversion Probability**: {lead_details['Conversion Probability']:.2f}")
+            st.write(f"**Predicted Conversion Probability**: {lead_details['Predicted Conversion Probability']:.2f}")
+            st.write("---")  # separator
     else:
-        st.write("Please select leads to view details.")
+        st.write("Please select at least one lead.")
 
-# Toggle Show/Hide Training Data
-if "show_training_data" not in st.session_state:
-    st.session_state["show_training_data"] = False
-
-toggle_label = "Hide Training Data" if st.session_state["show_training_data"] else "Show Training Data"
-if st.button(toggle_label):
-    st.session_state["show_training_data"] = not st.session_state["show_training_data"]
-
-# Display Training Data with Lead Names
-if st.session_state["show_training_data"]:
-    # Add Lead Name to Training Data for better readability
-    X_train_with_names = X_train.copy()
-    X_train_with_names["Lead Name"] = lead_data.loc[X_train.index, "Lead Name"]
-    st.subheader("Training Data Sample")
-    st.table(X_train_with_names.set_index("Lead Name"))
+# Option to show/hide detailed training data
+if st.checkbox("Show/Hide Training Data"):
+    st.subheader("Training Data")
+    st.write(df[['Lead Name', 'Lead Source', 'Conversion Probability']])
