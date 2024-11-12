@@ -63,5 +63,14 @@ st.table(test_data[["Recent Interactions", "Last Engagement Days", "Lead Source"
 # Show Lead Scoring
 st.subheader("Lead Scoring with Conversion Probability")
 st.table(lead_data[["Lead Name", "Lead Source", "Conversion Probability"]])
-st.write("Training Leads:", train_data["Lead Name"].values)
-st.write("Testing Leads:", test_data["Lead Name"].values)
+
+# Add the Lead Name column to training and testing data for display purposes
+train_data = X_train.copy()
+train_data['Converted'] = y_train.values
+train_data['Lead Name'] = lead_data.loc[train_data.index, 'Lead Name']
+train_data["Lead Source"] = train_data["Lead Source Score"].map(source_mapping)
+
+test_data = X_test.copy()
+test_data['Converted'] = y_test.values
+test_data['Lead Name'] = lead_data.loc[test_data.index, 'Lead Name']
+test_data["Lead Source"] = test_data["Lead Source Score"].map(source_mapping)
