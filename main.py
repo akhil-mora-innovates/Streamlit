@@ -44,30 +44,27 @@ df['Predicted Conversion Probability'] = model.predict(X)
 # Streamlit UI Setup
 st.title("Lead Conversion Probability Prediction")
 
-# Show charts and tables independently of lead selection
-if st.button("Show Training Data"):
-    st.write("Training Data", df[['Lead Name', 'Lead Source', 'Conversion Probability']])
-
-# Show Conversion Probability Distribution Chart
-fig = px.histogram(df, x="Conversion Probability", nbins=20, title="Conversion Probability Distribution")
-st.plotly_chart(fig, use_container_width=True)
-
-# Show Lead Source Distribution Chart
+# Show charts independently
+st.subheader("Lead Source Distribution")
 fig2 = px.pie(df, names="Lead Source", title="Lead Source Distribution")
 st.plotly_chart(fig2, use_container_width=True)
+
+st.subheader("Conversion Probability Distribution")
+fig = px.histogram(df, x="Conversion Probability", nbins=20, title="Conversion Probability Distribution")
+st.plotly_chart(fig, use_container_width=True)
 
 # Lead Details Selector (Checkboxes for selection)
 st.subheader("Lead Details")
 
-# Sort the leads alphabetically
-sorted_leads = sorted(df['Lead Name'].unique())
+# Initialize session state for selected leads (if not already initialized)
+if 'selected_leads' not in st.session_state:
+    st.session_state.selected_leads = []
 
 # Create a collapsible container for the checkboxes
 with st.expander("Select Leads to View Details"):
-    # Initialize session state for selected leads
-    if 'selected_leads' not in st.session_state:
-        st.session_state.selected_leads = []
-
+    # Sort the leads alphabetically
+    sorted_leads = sorted(df['Lead Name'].unique())
+    
     # Add checkboxes for leads and store selected leads in session state
     for lead in sorted_leads:
         if st.checkbox(lead, key=lead):
