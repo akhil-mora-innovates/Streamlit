@@ -63,3 +63,5 @@ st.table(test_data[["Recent Interactions", "Last Engagement Days", "Lead Source"
 # Show Lead Scoring
 st.subheader("Lead Scoring with Conversion Probability")
 st.table(lead_data[["Lead Name", "Lead Source", "Conversion Probability"]])
+st.write("Training Leads:", train_data["Lead Name"].values)
+st.write("Testing Leads:", test_data["Lead Name"].values)
