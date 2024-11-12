@@ -24,6 +24,13 @@ y = lead_data["Converted"]
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+# Create training and testing datasets for display
+train_data = X_train.copy()
+train_data['Converted'] = y_train.values
+
+test_data = X_test.copy()
+test_data['Converted'] = y_test.values
+
 # Train model
 model = LogisticRegression()
 model.fit(X_train, y_train)
@@ -38,5 +45,15 @@ lead_data["Conversion Probability"] = model.predict_proba(X)[:, 1]
 # Streamlit UI
 st.title("Predictive Lead Scoring")
 st.write("Model Accuracy:", accuracy)
-st.write("Lead Scoring:")
+
+# Show Training Data
+st.subheader("Training Data")
+st.table(train_data)
+
+# Show Testing Data
+st.subheader("Testing Data")
+st.table(test_data)
+
+# Show Lead Scoring
+st.subheader("Lead Scoring with Conversion Probability")
 st.table(lead_data[["Lead Name", "Conversion Probability"]])
