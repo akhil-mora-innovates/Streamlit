@@ -6,19 +6,26 @@ from sklearn.metrics import accuracy_score
 import streamlit as st
 import plotly.express as px
 
-# Sample data creation
-data = {
-    "Lead Name": ["Lead A", "Lead B", "Lead C", "Lead D", "Lead E", "Lead F", "Lead G", "Lead H", "Lead I", "Lead J"],
-    "Recent Interactions": np.random.randint(1, 20, 10),
-    "Last Engagement Days": np.random.randint(0, 30, 10),
-    "Lead Source Score": np.random.randint(1, 4, 10),
-    "Company Size Score": np.random.randint(1, 10, 10),
-    "Converted": np.random.randint(0, 2, 10)
-}
+# Function to generate sample data
+def generate_sample_data():
+    data = {
+        "Lead Name": ["Lead A", "Lead B", "Lead C", "Lead D", "Lead E", "Lead F", "Lead G", "Lead H", "Lead I", "Lead J"],
+        "Recent Interactions": np.random.randint(1, 20, 10),
+        "Last Engagement Days": np.random.randint(0, 30, 10),
+        "Lead Source Score": np.random.randint(1, 4, 10),
+        "Company Size Score": np.random.randint(1, 10, 10),
+        "Converted": np.random.randint(0, 2, 10)
+    }
+    lead_data = pd.DataFrame(data)
+    source_mapping = {1: "Conferences", 2: "Website Visit", 3: "Reference Contact"}
+    lead_data["Lead Source"] = lead_data["Lead Source Score"].map(source_mapping)
+    return lead_data
 
-lead_data = pd.DataFrame(data)
-source_mapping = {1: "Conferences", 2: "Website Visit", 3: "Reference Contact"}
-lead_data["Lead Source"] = lead_data["Lead Source Score"].map(source_mapping)
+# Initialize or regenerate data based on button click
+if "lead_data" not in st.session_state or st.button("Refresh Data"):
+    st.session_state["lead_data"] = generate_sample_data()
+
+lead_data = st.session_state["lead_data"]
 
 # Define features and target
 X = lead_data[["Recent Interactions", "Last Engagement Days", "Lead Source Score", "Company Size Score"]]
@@ -38,10 +45,6 @@ lead_data["Conversion Probability"] = model.predict_proba(X)[:, 1]
 # Streamlit UI Layout
 st.title("Enhanced Predictive Lead Scoring App")
 st.write("Model Accuracy:", accuracy)
-
-# Interactive Buttons
-if st.button("Refresh Data"):
-    st.experimental_rerun()  # This button will refresh the app, re-running all code.
 
 # Sidebar Selection for Lead Details
 st.sidebar.header("Lead Details")
@@ -78,11 +81,6 @@ with col2:
         title="Lead Source Distribution",
     )
     st.plotly_chart(fig2)
-
-# Additional Button for Prediction
-if st.button("Recalculate Probabilities"):
-    lead_data["Conversion Probability"] = model.predict_proba(X)[:, 1]
-    st.success("Conversion probabilities updated!")
 
 st.write("### Detailed Lead Information")
 st.table(lead_data[["Lead Name", "Lead Source", "Conversion Probability"]])
