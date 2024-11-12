@@ -52,10 +52,16 @@ selected_lead = st.sidebar.selectbox("Select a Lead", lead_data["Lead Name"].uni
 selected_lead_data = lead_data[lead_data["Lead Name"] == selected_lead]
 st.sidebar.write(f"Conversion Probability for {selected_lead}: {selected_lead_data['Conversion Probability'].values[0]:.2f}")
 
-# Display Training Data
-st.subheader("Training Data Sample")
-if st.button("Show Training Data"):
-    st.write("Training Data Sample:")
+# Toggle Show/Hide Training Data
+if "show_training_data" not in st.session_state:
+    st.session_state["show_training_data"] = False
+
+toggle_label = "Hide Training Data" if st.session_state["show_training_data"] else "Show Training Data"
+if st.button(toggle_label):
+    st.session_state["show_training_data"] = not st.session_state["show_training_data"]
+
+if st.session_state["show_training_data"]:
+    st.subheader("Training Data Sample")
     st.table(X_train)
 
 # Column Layouts for Visualizations
