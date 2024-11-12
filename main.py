@@ -42,7 +42,7 @@ model.fit(X_train, y_train)
 df['Predicted Conversion Probability'] = model.predict(X)
 
 # Streamlit UI Setup
-st.title("Lead Conversion Probability Prediction by Akhil")
+st.title("Lead Conversion Probability Prediction")
 
 # Show charts and tables
 if st.button("Show Training Data"):
@@ -56,28 +56,23 @@ st.plotly_chart(fig, use_container_width=True)
 fig2 = px.pie(df, names="Lead Source", title="Lead Source Distribution")
 st.plotly_chart(fig2, use_container_width=True)
 
-# Lead Details Selector (Now in the main app)
+# Lead Details Selector (Checkboxes for selection)
 st.subheader("Lead Details")
-selected_leads = st.multiselect(
-    "Select Leads to View Details",
-    options=df['Lead Name'].unique(),  # No pre-selection
-)
 
-# Adding a "Confirm Selection" step
+# Create checkboxes for each lead
+selected_leads = []
+for lead in df['Lead Name']:
+    if st.checkbox(f"Select {lead}", key=lead):
+        selected_leads.append(lead)
+
+# Show Details Button
 if selected_leads:
-    confirm_selection = st.radio(
-        "You have selected leads. Do you want to proceed with showing details?",
-        ('OK', 'Cancel'),
-        index=1  # default to 'Cancel'
-    )
-
-    if confirm_selection == 'OK':
-        # Display the details when the "Show Details" button is clicked
+    show_details = st.button("Show Selected Lead Details")
+    if show_details:
+        # Display the details of the selected leads
         st.write("Showing details for the selected leads:")
         details = df[df['Lead Name'].isin(selected_leads)]
         st.write(details[['Lead Name', 'Lead Source', 'Conversion Probability', 'Predicted Conversion Probability']])
-    elif confirm_selection == 'Cancel':
-        st.write("You have canceled the selection.")
 else:
     st.write("Please select leads to view details.")
 
