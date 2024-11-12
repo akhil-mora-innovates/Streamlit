@@ -52,7 +52,7 @@ selected_lead = st.sidebar.selectbox("Select a Lead", lead_data["Lead Name"].uni
 selected_lead_data = lead_data[lead_data["Lead Name"] == selected_lead]
 st.sidebar.write(f"Conversion Probability for {selected_lead}: {selected_lead_data['Conversion Probability'].values[0]:.2f}")
 
-# Toggle Show/Hide Training Data with Lead Names
+# Toggle Show/Hide Training Data
 if "show_training_data" not in st.session_state:
     st.session_state["show_training_data"] = False
 
@@ -60,15 +60,12 @@ toggle_label = "Hide Training Data" if st.session_state["show_training_data"] el
 if st.button(toggle_label):
     st.session_state["show_training_data"] = not st.session_state["show_training_data"]
 
-# Extract Lead Names for Training Data and Display Table
+# Display Training Data with Lead Names
 if st.session_state["show_training_data"]:
-    st.subheader("Training Data Sample")
-    
-    # Create a copy of X_train and add Lead Name column
+    # Add Lead Name to Training Data for better readability
     X_train_with_names = X_train.copy()
     X_train_with_names["Lead Name"] = lead_data.loc[X_train.index, "Lead Name"]
-    
-    # Set Lead Name as index for display
+    st.subheader("Training Data Sample")
     st.table(X_train_with_names.set_index("Lead Name"))
 
 # Column Layouts for Visualizations
@@ -84,7 +81,7 @@ with col1:
         title="Lead Conversion Probabilities",
         labels={"Conversion Probability": "Probability"},
     )
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
 with col2:
     st.subheader("Lead Source Distribution")
@@ -93,7 +90,17 @@ with col2:
         names="Lead Source",
         title="Lead Source Distribution",
     )
-    st.plotly_chart(fig2)
+    st.plotly_chart(fig2, use_container_width=True)
 
-st.write("### Detailed Lead Information")
-st.table(lead_data[["Lead Name", "Lead Source", "Conversion Probability"]])
+# Toggle Show/Hide Detailed Lead Information
+if "show_detailed_info" not in st.session_state:
+    st.session_state["show_detailed_info"] = False
+
+detail_toggle_label = "Hide Detailed Lead Information" if st.session_state["show_detailed_info"] else "Show Detailed Lead Information"
+if st.button(detail_toggle_label):
+    st.session_state["show_detailed_info"] = not st.session_state["show_detailed_info"]
+
+# Display Detailed Lead Information Table
+if st.session_state["show_detailed_info"]:
+    st.write("### Detailed Lead Information")
+    st.table(lead_data[["Lead Name", "Lead Source", "Conversion Probability"]])
