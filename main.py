@@ -63,13 +63,14 @@ selected_leads = st.multiselect(
     options=df['Lead Name'].unique(),  # No pre-selection
 )
 
-# Show detailed lead information with the probability score when selection is complete
-if st.button("Show Details"):
-    if selected_leads:
+# Display the details when the "Show Details" button is clicked
+if selected_leads:
+    if st.button("Show Details"):
+        # Filter the details of selected leads
         details = df[df['Lead Name'].isin(selected_leads)]
         st.write(details[['Lead Name', 'Lead Source', 'Conversion Probability', 'Predicted Conversion Probability']])
-    else:
-        st.write("No leads selected.")
+else:
+    st.write("Please select leads to view details.")
 
 # Footer Information
 st.markdown("""
