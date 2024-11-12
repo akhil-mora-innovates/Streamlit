@@ -44,7 +44,7 @@ df['Predicted Conversion Probability'] = model.predict(X)
 # Streamlit UI Setup
 st.title("Lead Conversion Probability Prediction")
 
-# Show charts and tables
+# Show charts and tables independently of lead selection
 if st.button("Show Training Data"):
     st.write("Training Data", df[['Lead Name', 'Lead Source', 'Conversion Probability']])
 
