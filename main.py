@@ -31,10 +31,12 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Create training and testing datasets for display
 train_data = X_train.copy()
 train_data['Converted'] = y_train.values
+train_data['Lead Name'] = lead_data.loc[train_data.index, 'Lead Name']
 train_data["Lead Source"] = train_data["Lead Source Score"].map(source_mapping)
 
 test_data = X_test.copy()
 test_data['Converted'] = y_test.values
+test_data['Lead Name'] = lead_data.loc[test_data.index, 'Lead Name']
 test_data["Lead Source"] = test_data["Lead Source Score"].map(source_mapping)
 
 # Train model
@@ -60,17 +62,12 @@ st.table(train_data[["Recent Interactions", "Last Engagement Days", "Lead Source
 st.subheader("Testing Data")
 st.table(test_data[["Recent Interactions", "Last Engagement Days", "Lead Source", "Company Size Score", "Converted"]])
 
-# Show Lead Scoring
-st.subheader("Lead Scoring with Conversion Probability")
-st.table(lead_data[["Lead Name", "Lead Source", "Conversion Probability"]])
+# Allow user to select a lead to view its conversion probability
+st.subheader("Lead Conversion Probability")
 
-# Add the Lead Name column to training and testing data for display purposes
-train_data = X_train.copy()
-train_data['Converted'] = y_train.values
-train_data['Lead Name'] = lead_data.loc[train_data.index, 'Lead Name']
-train_data["Lead Source"] = train_data["Lead Source Score"].map(source_mapping)
+# Dropdown to select a lead name
+selected_lead = st.selectbox("Select a Lead", lead_data["Lead Name"].unique())
 
-test_data = X_test.copy()
-test_data['Converted'] = y_test.values
-test_data['Lead Name'] = lead_data.loc[test_data.index, 'Lead Name']
-test_data["Lead Source"] = test_data["Lead Source Score"].map(source_mapping)
+# Display the conversion probability for the selected lead
+selected_lead_data = lead_data[lead_data["Lead Name"] == selected_lead]
+st.write(f"Conversion Probability for {selected_lead}: {selected_lead_data['Conversion Probability'].values[0]:.2f}")
