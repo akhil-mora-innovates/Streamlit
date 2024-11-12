@@ -6,19 +6,25 @@ from sklearn.metrics import accuracy_score
 import streamlit as st
 import plotly.express as px
 
-# Function to generate sample data
+# Function to generate more realistic sample data
 def generate_sample_data():
+    np.random.seed(42)  # For reproducibility
     data = {
-        "Lead Name": ["Lead A", "Lead B", "Lead C", "Lead D", "Lead E", "Lead F", "Lead G", "Lead H", "Lead I", "Lead J"],
-        "Recent Interactions": np.random.randint(1, 20, 10),
-        "Last Engagement Days": np.random.randint(0, 30, 10),
-        "Lead Source Score": np.random.randint(1, 4, 10),
-        "Company Size Score": np.random.randint(1, 10, 10),
-        "Converted": np.random.randint(0, 2, 10)
+        "Lead Name": [
+            "Lead A", "Lead B", "Lead C", "Lead D", "Lead E", "Lead F", "Lead G", "Lead H", "Lead I", "Lead J",
+            "Lead K", "Lead L", "Lead M", "Lead N", "Lead O", "Lead P", "Lead Q", "Lead R", "Lead S", "Lead T"
+        ],
+        "Recent Interactions": np.random.randint(5, 30, 20),  # More realistic interaction values
+        "Last Engagement Days": np.random.randint(5, 60, 20),  # Engagement days ranging from 5 to 60
+        "Lead Source Score": np.random.randint(1, 4, 20),  # Same Lead Sources: 1 - Conferences, 2 - Website Visit, 3 - Reference Contact
+        "Company Size Score": np.random.randint(5, 15, 20),  # A range of company sizes from 5 to 15
+        "Converted": np.random.randint(0, 2, 20)  # Binary outcome for conversion
     }
+    
     lead_data = pd.DataFrame(data)
     source_mapping = {1: "Conferences", 2: "Website Visit", 3: "Reference Contact"}
     lead_data["Lead Source"] = lead_data["Lead Source Score"].map(source_mapping)
+    
     return lead_data
 
 # Initialize or regenerate data based on button click
@@ -35,7 +41,7 @@ y = lead_data["Converted"]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Train model
-model = LogisticRegression()
+model = LogisticRegression(max_iter=500)  # Increase iterations for convergence
 model.fit(X_train, y_train)
 
 # Model accuracy
@@ -46,7 +52,33 @@ lead_data["Conversion Probability"] = model.predict_proba(X)[:, 1]
 st.title("Enhanced Predictive Lead Scoring App")
 st.write("Model Accuracy:", accuracy)
 
-# Sidebar Selection for Lead Details
+# Column Layouts for Initial Charts
+col1, col2 = st.columns(2)
+
+# Conversion Probability by Lead Chart
+with col1:
+    st.subheader("Conversion Probability by Lead")
+    fig = px.bar(
+        lead_data,
+        x="Lead Name",
+        y="Conversion Probability",
+        color="Lead Source",
+        title="Lead Conversion Probabilities",
+        labels={"Conversion Probability": "Probability"},
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+# Lead Source Distribution Chart
+with col2:
+    st.subheader("Lead Source Distribution")
+    fig2 = px.pie(
+        lead_data,
+        names="Lead Source",
+        title="Lead Source Distribution",
+    )
+    st.plotly_chart(fig2, use_container_width=True)
+
+# Sidebar Selection for Lead Details (Moved to Main UI)
 selected_lead = st.selectbox("Select a Lead", lead_data["Lead Name"].unique())
 
 # Add the button for Show/Hide Detailed Lead Information in the main UI
@@ -72,11 +104,11 @@ if st.session_state["show_detailed_info"]:
     st.write(f"**Conversion Probability**: {selected_lead_data['Conversion Probability'].values[0]:.2f}")
     
     # Display Lead Source in a Pie Chart
-    st.subheader("Lead Source Distribution")
+    st.subheader("Lead Source Breakdown")
     fig = px.pie(
         selected_lead_data,
         names="Lead Source",
-        title="Lead Source",
+        title="Lead Source Breakdown for Selected Lead",
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -95,27 +127,3 @@ if st.session_state["show_training_data"]:
     X_train_with_names["Lead Name"] = lead_data.loc[X_train.index, "Lead Name"]
     st.subheader("Training Data Sample")
     st.table(X_train_with_names.set_index("Lead Name"))
-
-# Column Layouts for Visualizations
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("Conversion Probability by Lead")
-    fig = px.bar(
-        lead_data,
-        x="Lead Name",
-        y="Conversion Probability",
-        color="Lead Source",
-        title="Lead Conversion Probabilities",
-        labels={"Conversion Probability": "Probability"},
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-with col2:
-    st.subheader("Lead Source Distribution")
-    fig2 = px.pie(
-        lead_data,
-        names="Lead Source",
-        title="Lead Source Distribution",
-    )
-    st.plotly_chart(fig2, use_container_width=True)
