@@ -59,11 +59,15 @@ st.plotly_chart(fig2, use_container_width=True)
 # Lead Details Selector (Checkboxes for selection)
 st.subheader("Lead Details")
 
-# Create checkboxes for each lead
-selected_leads = []
-for lead in df['Lead Name']:
-    if st.checkbox(f"Select {lead}", key=lead):
-        selected_leads.append(lead)
+# Sort the leads alphabetically
+sorted_leads = sorted(df['Lead Name'].unique())
+
+# Create a collapsible container for the checkboxes
+with st.expander("Select Leads to View Details"):
+    selected_leads = []
+    for lead in sorted_leads:
+        if st.checkbox(lead, key=lead):  # No "Select" prefix
+            selected_leads.append(lead)
 
 # Show Details Button
 if selected_leads:
@@ -79,5 +83,6 @@ else:
 # Footer Information
 st.markdown("""
     **Conversion Prediction Model**
-    - Uses a proprietory training model to predict the conversion probability for leads based on the lead source.
+    - Uses a Linear Regression model to predict the conversion probability for leads based on the lead source.
+    - The model was trained on synthetic lead data with various lead sources and conversion probabilities.
 """)
