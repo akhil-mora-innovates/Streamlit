@@ -42,7 +42,7 @@ model.fit(X_train, y_train)
 df['Predicted Conversion Probability'] = model.predict(X)
 
 # Streamlit UI Setup
-st.title("Lead Conversion Probability Prediction")
+st.title("Lead Conversion Prediction by Akhil")
 
 # Show charts and tables
 if st.button("Show Training Data"):
