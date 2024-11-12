@@ -42,7 +42,7 @@ model.fit(X_train, y_train)
 df['Predicted Conversion Probability'] = model.predict(X)
 
 # Streamlit UI Setup
-st.title("Lead Conversion Probability Prediction")
+st.title("Lead Conversion Probability Prediction by Akhil")
 
 # Show charts and tables
 if st.button("Show Training Data"):
@@ -84,6 +84,5 @@ else:
 # Footer Information
 st.markdown("""
     **Conversion Prediction Model**
-    - Uses a Linear Regression model to predict the conversion probability for leads based on the lead source.
-    - The model was trained on synthetic lead data with various lead sources and conversion probabilities.
+    - Uses a proprietory training model to predict the conversion probability for leads based on the lead source.
 """)
