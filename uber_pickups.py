@@ -12,3 +12,10 @@ def load_data(nrows):
     data.rename(lowercase, axis='columns', inplace=True)
     data[DATE_COLUMN] = pd.to_datetime(data[DATE_COLUMN])
     return data
+
+# Create a text element on the app that shows data is loading
+data_load_state = st.text('Loading data, please wait...')
+# Load 10,000 rows
+data = load_data(10000)
+# Show notification data has been loaded
+data_load_state.text('Loading data...done!')
